@@ -5,6 +5,21 @@ import requests
 import feedparser 
 from fpdf import FPDF
 from datetime import datetime
+import os
+
+# --- LOGO EN LA BARRA LATERAL ---
+# Intentamos cargar el logo. Si falla, el sistema sigue funcionando sin caerse.
+logo_path = "Logo2.jpg" # Cambia esto si el nombre en GitHub es distinto
+
+try:
+    if os.path.exists(logo_path):
+        st.sidebar.image(logo_path, use_container_width=True)
+    else:
+        st.sidebar.warning(f"No se encontró el archivo: {logo_path}")
+except Exception:
+    pass
+
+st.sidebar.markdown("---")
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Dashboard Industrial SLP", layout="wide")
