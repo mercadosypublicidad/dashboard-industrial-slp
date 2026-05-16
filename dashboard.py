@@ -9,8 +9,7 @@ import os
 
 # --- LOGO EN LA BARRA LATERAL ---
 # Intentamos cargar el logo. Si falla, el sistema sigue funcionando sin caerse.
-logo_path = "Logo2.jpg" # Cambia esto si el nombre en GitHub es distinto
-
+logo_path = "Logo2.png"
 try:
     if os.path.exists(logo_path):
         st.sidebar.image(logo_path, use_container_width=True)
