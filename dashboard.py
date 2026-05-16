@@ -324,15 +324,32 @@ def create_pdf(usd_val, eur_val, acero_val, infra, traffic_results, port_data, r
 
 
     # --- Pass protcción# ---
+# --- 2. PROTECCIÓN POR CONTRASEÑA ---
 def check_password():
     """Retorna True si el usuario ingresó la contraseña correcta."""
+    def password_entered():
+        """Comprueba si la contraseña ingresada es correcta."""
+        if st.session_state["password"] == st.secrets["auth"]["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Borra la contraseña de la memoria por seguridad
+        else:
+            st.session_state["password_correct"] = False
+
     if "password_correct" not in st.session_state:
-        st.text_input("Contraseña de Acceso Industrial", type="password", on_change=lambda: st.session_state.update(password_correct=(st.session_state.password == st.secrets["auth"]["password"])), key="password")
+        # Primera ejecución: Muestra el campo para ingresar la contraseña
+        st.text_input("Contraseña de Acceso Industrial", type="password", on_change=password_entered, key="password")
         return False
-    return st.session_state["password_correct"]
+    elif not st.session_state["password_correct"]:
+        # Contraseña incorrecta: Muestra el campo de nuevo y un mensaje de error
+        st.text_input("Contraseña de Acceso Industrial", type="password", on_change=password_entered, key="password")
+        st.error("❌ Contraseña incorrecta. Por favor, verifica tus credenciales.")
+        return False
+    else:
+        # Contraseña correcta
+        return True
 
 if not check_password():
-    st.stop() # Detiene la ejecución si no hay contraseña
+    st.stop() # Detiene la ejecución si no se ha superado la barrera de seguridad
 
 # --- PROCESAMIENTO ---
 usd_val, usd_var = get_financial_data("MXN=X")
