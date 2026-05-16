@@ -352,6 +352,15 @@ if not check_password():
     st.stop() # Detiene la ejecución si no se ha superado la barrera de seguridad
 
 # --- PROCESAMIENTO ---
+# --- LOGO EN LA BARRA LATERAL ---
+# use_container_width=True asegura que el logo se adapte perfectamente al ancho de la barra
+st.sidebar.image("Logo2.jpg", use_container_width=True)
+st.sidebar.markdown("---") # Añade una línea divisoria elegante debajo del logo
+
+
+
+
+
 usd_val, usd_var = get_financial_data("MXN=X")
 eur_val, eur_var = get_financial_data("EURMXN=X")
 acero_val, acero_var = get_financial_data("HRC=F")
