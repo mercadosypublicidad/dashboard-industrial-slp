@@ -252,27 +252,31 @@ def get_labor_dynamics():
 
 def get_daily_automotive_news():
     """
-    Extrae noticias automotrices de medios internacionales, nacionales y locales.
+    Extrae noticias automotrices de medios de alta autoridad (Internacional, Nacional y Local).
     Cita las fuentes de forma automática.
     """
-    # Definición de fuentes por región
+    import urllib.parse # Fundamental para codificar la URL de búsqueda correctamente
+    
+    # Definición de fuentes de alta autoridad y nicho especializado
     news_feeds = {
-        "EE. UU. (WP, NYT)": 'site:washingtonpost.com OR site:nytimes.com "automotive industry" OR "electric vehicles"',
-        "Europa (El País)": 'site:elpais.com "sector automotriz" OR "coches eléctricos"',
-        "México (Nacionales)": 'site:reforma.com OR site:milenio.com OR site:elfinanciero.com.mx OR site:eluniversal.com.mx "automotriz"',
-        "San Luis Potosí": 'site:pulsoslp.com.mx OR site:planoinformativo.com OR site:codigosanluis.com "clúster automotriz" OR "BMW SLP"'
+        "🌐 Internacional (Mercados y Cadena de Suministro)": 'site:reuters.com OR site:bloomberg.com OR site:wsj.com "automotive" OR "electric vehicles" OR "supply chain"',
+        "🇲🇽 Nacional (Economía y Nearshoring)": 'site:eleconomista.com.mx OR site:elfinanciero.com.mx "sector automotriz" OR "armadoras" OR "nearshoring" OR "aranceles"',
+        "📍 San Luis Potosí (Ecosistema Local)": 'site:pulsoslp.com.mx OR site:elexpres.com OR site:planoinformativo.com "clúster automotriz" OR "Logistik" OR "BMW" OR "Magna" OR "Villa de Reyes"',
+        "⚙️ Proveeduría e Industria (Medios Especializados)": 'site:clusterindustrial.com.mx OR site:mexicoindustry.com OR site:directorioautomotriz.com.mx "autopartes" OR "inversión" OR "tier 1" OR "proveeduría"'
     }
     
     results = {}
     
     for region, query in news_feeds.items():
-        # Usamos Google News RSS como puente para filtrar por sitios específicos
-        url = f"https://news.google.com/rss/search?q={query}&hl=es-419&gl=MX&ceid=MX:es-419"
+        # Codificamos el texto de búsqueda para evitar que los espacios o comillas rompan el enlace RSS
+        query_encoded = urllib.parse.quote(query)
+        url = f"https://news.google.com/rss/search?q={query_encoded}&hl=es-419&gl=MX&ceid=MX:es-419"
+        
         try:
             feed = feedparser.parse(url)
-            # Tomamos las 2 noticias más relevantes por sección
-            results[region] = feed.entries[:2]
-        except:
+            # Tomamos las 3 noticias más relevantes por sección (aumentamos de 2 a 3)
+            results[region] = feed.entries[:3]
+        except Exception:
             results[region] = []
             
     return results
