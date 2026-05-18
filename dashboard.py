@@ -255,11 +255,10 @@ def get_labor_dynamics():
 def get_daily_automotive_news():
     """
     Extrae noticias automotrices de medios de alta autoridad (Internacional, Nacional y Local).
-    Cita las fuentes de forma automática.
+    Filtra estrictamente para mostrar solo noticias de los últimos 7 días.
     """
-    import urllib.parse # Fundamental para codificar la URL de búsqueda correctamente
+    import urllib.parse
     
-    # Definición de fuentes de alta autoridad y nicho especializado
     news_feeds = {
         "🌐 Internacional (Mercados y Cadena de Suministro)": 'site:reuters.com OR site:bloomberg.com OR site:wsj.com "automotive" OR "electric vehicles" OR "supply chain"',
         "🇲🇽 Nacional (Economía y Nearshoring)": 'site:eleconomista.com.mx OR site:elfinanciero.com.mx "sector automotriz" OR "armadoras" OR "nearshoring" OR "aranceles"',
@@ -270,13 +269,17 @@ def get_daily_automotive_news():
     results = {}
     
     for region, query in news_feeds.items():
-        # Codificamos el texto de búsqueda para evitar que los espacios o comillas rompan el enlace RSS
-        query_encoded = urllib.parse.quote(query)
+        # EL TRUCO ESTÁ AQUÍ: Agregamos el parámetro 'when:7d' al final de cada búsqueda
+        # Si quisieras solo las de hoy, podrías cambiarlo a 'when:1d'
+        query_estricto = f'{query} when:7d'
+        
+        # Codificamos el texto para que la URL sea válida
+        query_encoded = urllib.parse.quote(query_estricto)
         url = f"https://news.google.com/rss/search?q={query_encoded}&hl=es-419&gl=MX&ceid=MX:es-419"
         
         try:
             feed = feedparser.parse(url)
-            # Tomamos las 3 noticias más relevantes por sección (aumentamos de 2 a 3)
+            # Tomamos las 3 noticias más recientes de la última semana
             results[region] = feed.entries[:3]
         except Exception:
             results[region] = []
