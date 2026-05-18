@@ -643,8 +643,11 @@ for i, (region, news_list) in enumerate(news_data.items()):
         if news_list:
             for entry in news_list:
                 st.markdown(f"**{entry.title}**")
-                # El link sirve como cita directa de la fuente
-                st.caption(f"Fuente citada: {entry.source.text if hasattr(entry, 'source') else 'Medio Oficial'}")
+                
+                # Extracción segura de la fuente (evita el AttributeError)
+                fuente = entry.get('source', {}).get('title', 'Medio Oficial')
+                st.caption(f"Fuente citada: {fuente}")
+                
                 st.markdown(f"[Leer nota completa]({entry.link})")
                 st.write("---")
         else:
