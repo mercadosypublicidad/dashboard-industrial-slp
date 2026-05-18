@@ -6,6 +6,8 @@ import feedparser
 from fpdf import FPDF
 from datetime import datetime
 import os
+import re
+import email.utils
 
 # --- LOGO EN LA BARRA LATERAL ---
 # Intentamos cargar el logo. Si falla, el sistema sigue funcionando sin caerse.
