@@ -653,7 +653,7 @@ for i, (region, news_list) in enumerate(news_data.items()):
         else:
             st.write("No se encontraron notas relevantes en las últimas 24 horas.")
 
-st.info("💡 **Nota de Ricardo Caballero:** Esta síntesis se actualiza automáticamente cada vez que refrescas el dashboard.")
+st.info("💡 **Nota** Esta síntesis se actualiza automáticamente cada vez que refrescas el dashboard.")
 
 
 # --- GENERACIÓN DE PDF ---
