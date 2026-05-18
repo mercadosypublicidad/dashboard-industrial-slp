@@ -642,11 +642,41 @@ for i, (region, news_list) in enumerate(news_data.items()):
         st.subheader(f"📍 {region}")
         if news_list:
             for entry in news_list:
+                
+                # 1. Extracción y formato de la FECHA
+                fecha_raw = entry.get('published', '')
+                try:
+                    # Convierte el formato técnico a algo legible para el usuario
+                    fecha_dt = email.utils.parsedate_to_datetime(fecha_raw)
+                    fecha_str = fecha_dt.strftime("%d/%m/%Y %H:%M")
+                except Exception:
+                    fecha_str = fecha_raw  # Si falla el formato, muestra el original
+                
+                # 2. Extracción de la FOTO DESTACADA
+                img_url = None
+                # Intenta buscar la imagen en las etiquetas multimedia
+                if 'media_content' in entry and len(entry.media_content) > 0:
+                    img_url = entry.media_content[0].get('url')
+                else:
+                    # Si no está ahí, escanea el código fuente del resumen buscando el <img>
+                    summary = entry.get('summary', '')
+                    img_match = re.search(r'<img[^>]+src="([^">]+)"', summary)
+                    if img_match:
+                        img_url = img_match.group(1)
+
+                # 3. INTERFAZ VISUAL
                 st.markdown(f"**{entry.title}**")
                 
-                # Extracción segura de la fuente (evita el AttributeError)
+                # Si encontró una imagen, la muestra adaptada al ancho de la columna
+                if img_url:
+                    try:
+                        st.image(img_url, use_container_width=True)
+                    except Exception:
+                        pass # Si la URL de la imagen está rota, la ignoramos y el sistema no se cae
+                
+                # Muestra la fuente y la fecha juntas
                 fuente = entry.get('source', {}).get('title', 'Medio Oficial')
-                st.caption(f"Fuente citada: {fuente}")
+                st.caption(f"📰 {fuente} | 📅 {fecha_str}")
                 
                 st.markdown(f"[Leer nota completa]({entry.link})")
                 st.write("---")
