@@ -10,7 +10,6 @@ import re
 import email.utils
 
 # --- LOGO EN LA BARRA LATERAL ---
-# Intentamos cargar el logo. Si falla, el sistema sigue funcionando sin caerse.
 logo_path = "Logo2.png"
 try:
     if os.path.exists(logo_path):
@@ -25,14 +24,23 @@ st.sidebar.markdown("---")
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Dashboard Industrial SLP", layout="wide")
 
-# TIP: Por seguridad, usa st.secrets["GOOGLE_API_KEY"] en producción
-# Si aún no lo configuras, deja el string, pero no lo compartas públicamente.
-# Intenta leer de secrets, si falla, usa el string directo
 try:
     GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
     GOOGLE_API_KEY = "AIzaSyCnGRVD3irowz5gKCaVN7d-7YXwQi-jthU"
+
 # --- FUNCIONES DE EXTRACCIÓN ---
+
+def get_stonex_link():
+    """Genera la liga diaria del Morning Call de STONEX basada en la fecha actual."""
+    # Lista de meses en inglés para coincidir con la estructura de la URL de Covver
+    meses_en = ["", "january", "february", "march", "april", "may", "june", 
+                "july", "august", "september", "october", "november", "december"]
+    hoy = datetime.now()
+    mes = meses_en[hoy.month]
+    
+    # Construye la URL dinámica (Ej: may-18-2026-morning-call/5)
+    return f"https://covver.com/magazine/stonex/{mes}-{hoy.day}-{hoy.year}-morning-call/5"
 
 def get_financial_data(ticker_symbol):
     """Obtiene datos de Yahoo Finance."""
@@ -77,7 +85,6 @@ def get_traffic_slp(api_key):
 
 def get_infrastructure_status():
     """Estatus de Energía (CENACE) y Agua (CEA/CONAGUA)."""
-    # En una fase avanzada, aquí podrías integrar scraping de niveles de presas o acuíferos
     return {
         "energia_estatus": "Estable",
         "energia_detalle": "Red de Alta Tensión operando sin restricciones en Villa de Reyes y Mexquitic.",
@@ -86,14 +93,8 @@ def get_infrastructure_status():
         "fuentes": "CENACE / Comisión Estatal del Agua (CEA) / CONAGUA"
     }
 
-# --- Ferroviario ---
-
 def get_rail_status():
-    """
-    Monitoreo de fluidez en corredores ferroviarios hacia la frontera.
-    Fuente: CPKC / Ferromex Service Advisories.
-    """
-    # Lógica de simulación basada en monitoreo de boletines operativos
+    """Monitoreo de fluidez en corredores ferroviarios hacia la frontera."""
     return [
         {
             "linea": "CPKC (KCSM)",
@@ -110,10 +111,7 @@ def get_rail_status():
     ]
 
 def get_port_status():
-    """
-    Monitoreo de saturación y desalojo en puertos clave para el Bajío.
-    Fuente: ASIPONA / Reportes de Terminales Privadas.
-    """
+    """Monitoreo de saturación y desalojo en puertos clave para el Bajío."""
     return [
         {
             "puerto": "Lázaro Cárdenas",
@@ -130,19 +128,12 @@ def get_port_status():
     ]
 
 def get_tmec_updates():
-    """
-    Busca actualizaciones oficiales de Reglas de Origen T-MEC.
-    Fuente: Secretaría de Economía / Diario Oficial de la Federación.
-    """
+    """Busca actualizaciones oficiales de Reglas de Origen T-MEC."""
     import feedparser
-    
-    # Buscamos en el RSS de noticias de Google pero restringido a sitios de gobierno
     search_query = 'site:gob.mx "Reglas de Origen" "T-MEC" OR "TMEC"'
     url = f"https://news.google.com/rss/search?q={search_query}&hl=es-419&gl=MX&ceid=MX:es-419"
-    
     try:
         feed = feedparser.parse(url)
-        # Tomamos solo la actualización más reciente
         if feed.entries:
             latest = feed.entries[0]
             return {
@@ -162,12 +153,7 @@ def get_tmec_updates():
     }
 
 def get_automotive_production():
-    """
-    Obtiene datos de producción y exportación automotriz.
-    Fuente: INEGI / AMIA (RAIA).
-    """
-    # En una versión avanzada, aquí conectarías con el token del INEGI
-    # Por ahora, estructuramos el reporte basado en el último boletín oficial
+    """Obtiene datos de producción y exportación automotriz."""
     return {
         "mes": "Abril 2024",
         "produccion_unidades": 358675,
@@ -177,24 +163,16 @@ def get_automotive_production():
     }
 
 def get_usa_auto_market():
-    """
-    Monitoreo del mercado automotriz en Estados Unidos.
-    Fuente: BEA (U.S. Gov) / Cox Automotive.
-    """
-    # Lógica basada en los últimos reportes SAAR (Ventas Anualizadas)
+    """Monitoreo del mercado automotriz en Estados Unidos."""
     return {
-        "ventas_anualizadas": "15.5M", # Millones de unidades SAAR
-        "inventario_dias": "72 días",   # Promedio de días en concesionarios
+        "ventas_anualizadas": "15.5M", 
+        "inventario_dias": "72 días",   
         "tendencia": "Estable",
-        "variacion_inventario": "+5.2%" # Incremento en stock respecto al mes anterior
+        "variacion_inventario": "+5.2%" 
     }
 
 def get_trade_policy_alerts():
-    """
-    Monitorea aranceles de emergencia y políticas de comercio global (EV).
-    Fuente: USTR / Federal Register.
-    """
-    # Lógica de búsqueda enfocada en aranceles a componentes eléctricos
+    """Monitorea aranceles de emergencia y políticas de comercio global (EV)."""
     return {
         "alerta": "Aranceles Sección 301 - Componentes EV",
         "impacto": "Revisiones activas para componentes de baterías de origen asiático.",
@@ -203,26 +181,18 @@ def get_trade_policy_alerts():
     }
 
 def get_maritime_disruptions():
-    """
-    Monitorea alertas en rutas marítimas críticas (Asia/Europa).
-    Fuente: Drewry / Maersk Service Advisories.
-    """
-    # Lógica basada en el monitoreo de incidentes en puntos de estrangulamiento (Chokepoints)
+    """Monitorea alertas en rutas marítimas críticas (Asia/Europa)."""
     return {
         "ruta_asia": "Canal de Suez / Mar Rojo",
         "estatus_asia": "Riesgo Alto",
         "impacto_semi": "Retrasos de 10-15 días en semiconductores.",
         "ruta_europa": "Atlántico Norte",
         "estatus_europa": "Estable",
-        "costo_index": "+3.5%" # Variación del World Container Index
+        "costo_index": "+3.5%" 
     }
 
 def get_slp_industrial_status():
-    """
-    Monitorea el estado operativo de los parques industriales clave en SLP.
-    Fuente: Grupo Valoran (WTC) / Logistik Park / AMPIP.
-    """
-    # Basado en la reciente expansión y el panorama operativo de mayo 2026
+    """Monitorea el estado operativo de los parques industriales clave en SLP."""
     return [
         {
             "parque": "WTC Industrial (I, II y III)",
@@ -239,11 +209,7 @@ def get_slp_industrial_status():
     ]
 
 def get_labor_dynamics():
-    """
-    Monitoreo de paz laboral y eventos de reclutamiento en SLP.
-    Fuente: STPS Estatal / Centro de Conciliación Laboral.
-    """
-    # Datos basados en el panorama de mayo 2026 en la región
+    """Monitoreo de paz laboral y eventos de reclutamiento en SLP."""
     return {
         "paz_laboral": "Estable",
         "huelgas_activas": 0,
@@ -253,10 +219,7 @@ def get_labor_dynamics():
     }
 
 def get_daily_automotive_news():
-    """
-    Extrae noticias automotrices de medios de alta autoridad (Internacional, Nacional y Local).
-    Filtra estrictamente para mostrar solo noticias de los últimos 7 días.
-    """
+    """Extrae noticias automotrices de medios de alta autoridad."""
     import urllib.parse
     
     news_feeds = {
@@ -269,17 +232,14 @@ def get_daily_automotive_news():
     results = {}
     
     for region, query in news_feeds.items():
-        # EL TRUCO ESTÁ AQUÍ: Agregamos el parámetro 'when:7d' al final de cada búsqueda
-        # Si quisieras solo las de hoy, podrías cambiarlo a 'when:1d'
-        query_estricto = f'{query} when:7d'
+        # Ajuste a 1 día (24 horas) para noticias hiper-recientes
+        query_estricto = f'{query} when:1d'
         
-        # Codificamos el texto para que la URL sea válida
         query_encoded = urllib.parse.quote(query_estricto)
         url = f"https://news.google.com/rss/search?q={query_encoded}&hl=es-419&gl=MX&ceid=MX:es-419"
         
         try:
             feed = feedparser.parse(url)
-            # Tomamos las 3 noticias más recientes de la última semana
             results[region] = feed.entries[:3]
         except Exception:
             results[region] = []
@@ -301,7 +261,6 @@ def create_pdf(usd_val, eur_val, acero_val, infra, traffic_results, port_data, r
     pdf.cell(0, 5, f"San Luis Potosi | {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True, align='C')
     pdf.ln(15)
 
-    # Reset de colores
     pdf.set_text_color(0, 0, 0)
     
     # --- SECCIÓN 1: FINANCIEROS (Estilo Tabla) ---
@@ -345,34 +304,27 @@ def create_pdf(usd_val, eur_val, acero_val, infra, traffic_results, port_data, r
     return pdf.output(dest='S')
 
 
-
-    # --- Pass protcción# ---
-# --- 2. PROTECCIÓN POR CONTRASEÑA ---
+# --- PROTECCIÓN POR CONTRASEÑA ---
 def check_password():
-    """Retorna True si el usuario ingresó la contraseña correcta."""
     def password_entered():
-        """Comprueba si la contraseña ingresada es correcta."""
         if st.session_state["password"] == st.secrets["auth"]["password"]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Borra la contraseña de la memoria por seguridad
+            del st.session_state["password"]  
         else:
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        # Primera ejecución: Muestra el campo para ingresar la contraseña
         st.text_input("Contraseña de Acceso Industrial", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
-        # Contraseña incorrecta: Muestra el campo de nuevo y un mensaje de error
         st.text_input("Contraseña de Acceso Industrial", type="password", on_change=password_entered, key="password")
         st.error("❌ Contraseña incorrecta. Por favor, verifica tus credenciales.")
         return False
     else:
-        # Contraseña correcta
         return True
 
 if not check_password():
-    st.stop() # Detiene la ejecución si no se ha superado la barrera de seguridad
+    st.stop() 
 
 # --- PROCESAMIENTO ---
 
@@ -417,7 +369,11 @@ with col3:
 
 st.markdown("---")
 
-# --- En la interfaz de Streamlit ---
+# SECCIÓN STONEX (NUEVA)
+st.subheader("📈 Análisis de Mercado Diario")
+url_stonex = get_stonex_link()
+st.info(f"📰 **STONEX Morning Call:** [Haz clic aquí para leer el análisis completo de hoy en Covver Magazine]({url_stonex})")
+
 st.markdown("---")
 st.header("🏗️ Operaciones WTC e Industrial (SLP)")
 industrial_data = get_slp_industrial_status()
@@ -435,7 +391,6 @@ for i, p in enumerate(industrial_data):
 
 st.markdown("---")
 
-
 # SECCIÓN 2: TRÁFICO
 st.header("🛣️ Infraestructura y Conectividad")
 t_col1, t_col2 = st.columns(2)
@@ -450,8 +405,6 @@ for i, t in enumerate(traffic_results):
 
 st.markdown("---")
 
-# --- En la interfaz de Streamlit ---
-st.markdown("---")
 st.header("👥 Dinámica Laboral y Talento (SLP)")
 labor = get_labor_dynamics()
 
@@ -480,7 +433,6 @@ st.markdown("---")
 st.header("⚡💧 Monitoreo de Infraestructura Crítica")
 infra = get_infrastructure_status()
 
-# Mostramos la tarjeta unificada tal como la pediste
 if infra["energia_estatus"] == "Estable" and infra["agua_estatus"] == "Operativo":
     st.success(
         f"⚡ **Suministro Eléctrico:** {infra['energia_estatus']} \n\n"
@@ -494,7 +446,6 @@ else:
 
 st.caption(f"**Fuente:** {infra['fuentes']}")
 
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("🚂 Logística Ferroviaria y Portuaria")
 rail_data = get_rail_status()
@@ -514,7 +465,6 @@ for i, r in enumerate(rail_data):
         st.caption("**Fuente:** CPKC / Ferromex Customer Service Advisories")
 
 
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("🚢 Conectividad Marítima y Portuaria")
 port_data = get_port_status()
@@ -530,7 +480,6 @@ for i, p in enumerate(port_data):
         st.caption("**Fuente:** ASIPONA - Reporte Semanal de Productividad Portuaria")
 
 
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("⚖️ Política Industrial y Comercio Exterior")
 tmec = get_tmec_updates()
@@ -548,7 +497,6 @@ with col_t2:
     st.metric("Estatus T-MEC", tmec['estatus'])
 
 
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("🚗 Producción Automotriz (AMIA / INEGI)")
 auto_data = get_automotive_production()
@@ -567,7 +515,6 @@ with a_col3:
     st.metric("Variación Anual", auto_data['variacion_anual'], delta=auto_data['estatus'])
     st.caption("**Fuente:** Sistema de Cuentas Nacionales (INEGI)")
 
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("🇺🇸 Mercado Automotriz de EUA (Exportación)")
 usa_market = get_usa_auto_market()
@@ -587,8 +534,6 @@ with usa_col3:
     st.caption("**Fuente:** National Automobile Dealers Association (NADA)")
 
 
-
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("🌐 Políticas de Comercio Global y Aranceles")
 policy = get_trade_policy_alerts()
@@ -608,7 +553,6 @@ with pol_col2:
 st.info("💡 **Nota para SLP:** Los aranceles a componentes eléctricos impactan el Valor de Contenido Regional (VCR) de las plantas en Villa de Reyes.")
 
 
-# --- En la interfaz de Streamlit ---
 st.markdown("---")
 st.header("🌊 Disrupción Marítima Global (Semiconductores y Componentes)")
 maritime = get_maritime_disruptions()
@@ -637,7 +581,6 @@ st.subheader(f"Monitoreo Global, Nacional y Local | {datetime.now().strftime('%d
 
 news_data = get_daily_automotive_news()
 
-# Crear 4 columnas para organizar la síntesis
 n_col1, n_col2 = st.columns(2)
 n_col3, n_col4 = st.columns(2)
 cols = [n_col1, n_col2, n_col3, n_col4]
@@ -648,38 +591,30 @@ for i, (region, news_list) in enumerate(news_data.items()):
         if news_list:
             for entry in news_list:
                 
-                # 1. Extracción y formato de la FECHA
                 fecha_raw = entry.get('published', '')
                 try:
-                    # Convierte el formato técnico a algo legible para el usuario
                     fecha_dt = email.utils.parsedate_to_datetime(fecha_raw)
                     fecha_str = fecha_dt.strftime("%d/%m/%Y %H:%M")
                 except Exception:
-                    fecha_str = fecha_raw  # Si falla el formato, muestra el original
+                    fecha_str = fecha_raw  
                 
-                # 2. Extracción de la FOTO DESTACADA
                 img_url = None
-                # Intenta buscar la imagen en las etiquetas multimedia
                 if 'media_content' in entry and len(entry.media_content) > 0:
                     img_url = entry.media_content[0].get('url')
                 else:
-                    # Si no está ahí, escanea el código fuente del resumen buscando el <img>
                     summary = entry.get('summary', '')
                     img_match = re.search(r'<img[^>]+src="([^">]+)"', summary)
                     if img_match:
                         img_url = img_match.group(1)
 
-                # 3. INTERFAZ VISUAL
                 st.markdown(f"**{entry.title}**")
                 
-                # Si encontró una imagen, la muestra adaptada al ancho de la columna
                 if img_url:
                     try:
                         st.image(img_url, use_container_width=True)
                     except Exception:
-                        pass # Si la URL de la imagen está rota, la ignoramos y el sistema no se cae
+                        pass 
                 
-                # Muestra la fuente y la fecha juntas
                 fuente = entry.get('source', {}).get('title', 'Medio Oficial')
                 st.caption(f"📰 {fuente} | 📅 {fecha_str}")
                 
@@ -697,7 +632,6 @@ st.sidebar.header("📥 Exportación")
 
 if st.sidebar.button("Preparar Reporte PDF"):
     try:
-        # Llamada limpia a la función
         pdf_out = create_pdf(
             usd_val, eur_val, acero_val, infra, 
             traffic_results, port_data, rail_data, 
@@ -705,7 +639,6 @@ if st.sidebar.button("Preparar Reporte PDF"):
             usa_market, policy, maritime, industrial_data
         )
         
-        # Conversión segura a bytes
         pdf_bytes = bytes(pdf_out)
         
         st.sidebar.download_button(
